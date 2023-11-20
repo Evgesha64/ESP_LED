@@ -39,43 +39,45 @@ void connectWiFi() {
 // Функция, вызываемая при получении сообщений по MQTT
 void msgCallback(char* topic, byte* payload, unsigned int length) {
     String ckl_led;
-    String num_led;
-    String color_led1;
-    String color_led2;
-    String color_led3;
-    if (topic = "topic_ckl") {
-        for (unsigned int i = 0; i < length; i++) {
-            ckl_led += (char)payload[i]; 
+   // String num_led;
+   // String color_led1;
+   // String color_led2;
+   // String color_led3;
+
+
+    for (unsigned int i = 0; i < length; i++) {
+        int f1 = 0;
+        if ((char)payload[i] == '#') {
+            f1 = 1;
+            continue;
         }
-    }
-    else if (topic = "topic_num_RGB") {
-      for (unsigned int i = 0; i < length; i++) {
-           int f1 = 0;
 
         if ((char)payload[i] == ',') {
             f1++;
             continue;
         }
-        
         if (f1 == 0) {
-            num_led += (char)payload[i];
-            // Serial.print((char)payload[i]);
+            ckl_led += (char)payload[i];
         }
-        if (f1 == 1) {
-            color_led1 += (char)payload[i];
-            // Serial.print((char)payload[i]);
-        }
-        if (f1 == 2) {
-            color_led2 += (char)payload[i];
-            //  Serial.print((char)payload[i]);
-        }
-        if (f1 == 3) {
-            color_led3 += (char)payload[i];
-            // Serial.print((char)payload[i]);
-        }
-      }  
-    }
 
+        /* if(f1 == 1){
+         num_led += (char)payload[i];
+      // Serial.print((char)payload[i]);
+       }
+         if(f1 == 2){
+         color_led1 += (char)payload[i];
+        // Serial.print((char)payload[i]);
+       }
+         if(f1 == 3){
+          color_led2 += (char)payload[i];
+        //  Serial.print((char)payload[i]);
+       }
+         if(f1 == 4){
+          color_led3 += (char)payload[i];
+         // Serial.print((char)payload[i]);
+       } */
+    }
+   
     for (int i = 0; i <= 59; ) {
 
         leds[i].setRGB(my_led[ckl_led.toInt()][i - 1][0], my_led[ckl_led.toInt()][i - 1][1], my_led[ckl_led.toInt()][i - 1][2]);
@@ -85,7 +87,7 @@ void msgCallback(char* topic, byte* payload, unsigned int length) {
 
     FastLED.show();
     
-    
+
     
 
     const char* adresCkl_led = ckl_led.c_str();
@@ -120,13 +122,10 @@ void setup() {
     FastLED.addLeds <WS2812, PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(50);
     for (int i = 0; i <= 58; i++) {
-        int i2 = 0;
-        for (int i1 = 0; i1 <= 3; i1++) {
-            my_led[i + i1][i][0] = 255;
+        for (int i1 = 0; i1 <= 1; i1++) {
+            my_led[i][i][0] = 255;
 
         }
-
-
     }
 }
 
