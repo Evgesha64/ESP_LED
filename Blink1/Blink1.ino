@@ -2,6 +2,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <FastLED.h>
+//#define DEBUG
 // Настройки WiFi
 //const char* ssid = "TP-Link_D30C";
 //const char* password = "43954971";
@@ -10,7 +11,7 @@ const char* password = "12345678";
 // Настройки MQTT
 const char* mqtt_server = "192.168.0.103";
 const int mqtt_port = 1883;  // Порт по умолчанию для MQTT
-const char* mqtt_topic = "topik";
+const char* mqtt_topic = "topic_ckl";
 const char* topicCallback = "topicCallback";
 const char* client_id = "esp32";
 
@@ -82,7 +83,8 @@ void msgCallback(char* topic, byte* payload, unsigned int length) {
         i++;
 
     }
-
+    
+    
     FastLED.show();
     
     
@@ -90,7 +92,10 @@ void msgCallback(char* topic, byte* payload, unsigned int length) {
 
     const char* adresCkl_led = ckl_led.c_str();
     client.publish(topicCallback, adresCkl_led);
-   // Serial.println(ckl_led.toInt());
+   #ifdef DEBUG
+    Serial.println(ckl_led.toInt());
+   #endif // DEBUG
+
 
 }
 // Функция для подключения к MQTT брокеру
@@ -111,8 +116,12 @@ void connectMQTT() {
 }
 
 void setup() {
-   // Serial.begin(115200);
+   
+  #ifdef DEBUG
+    Serial.begin(115200);
+  #endif // DEBUG
 
+    
     connectWiFi();
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(msgCallback);
@@ -121,8 +130,8 @@ void setup() {
     FastLED.setBrightness(50);
     for (int i = 0; i <= 58; i++) {
         int i2 = 0;
-        for (int i1 = 0; i1 <= 3; i1++) {
-            my_led[i + i1][i][0] = 255;
+        for (int i1 = 0; i1 <= 1; i1++) {
+            my_led[i][i][0] = 255;
 
         }
 
