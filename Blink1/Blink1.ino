@@ -13,6 +13,7 @@ const char* mqtt_server = "192.168.0.103";
 const int mqtt_port = 1883;  // Порт по умолчанию для MQTT
 const char* mqtt_topic = "topic_ckl";
 const char* topicCallback = "topicCallback";
+const char* topic_num_RGB = "topic_num_RGB";
 const char* client_id = "esp32";
 
 
@@ -21,6 +22,7 @@ const char* client_id = "esp32";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+PubSubClient client1(espClient);
 CRGB leds[NUM_LEDS];
 
 int my_led[60][60][3]{};
@@ -40,42 +42,13 @@ void connectWiFi() {
 // Функция, вызываемая при получении сообщений по MQTT
 void msgCallback(char* topic, byte* payload, unsigned int length) {
     String ckl_led;
-    String num_led;
-    String color_led1;
-    String color_led2;
-    String color_led3;
-    if (topic = "topic_ckl") {
+    
+    
         for (unsigned int i = 0; i < length; i++) {
             ckl_led += (char)payload[i]; 
         }
-    }
-    else if (topic = "topic_num_RGB") {
-      for (unsigned int i = 0; i < length; i++) {
-           int f1 = 0;
-
-        if ((char)payload[i] == ',') {
-            f1++;
-            continue;
-        }
-        
-        if (f1 == 0) {
-            num_led += (char)payload[i];
-            // Serial.print((char)payload[i]);
-        }
-        if (f1 == 1) {
-            color_led1 += (char)payload[i];
-            // Serial.print((char)payload[i]);
-        }
-        if (f1 == 2) {
-            color_led2 += (char)payload[i];
-            //  Serial.print((char)payload[i]);
-        }
-        if (f1 == 3) {
-            color_led3 += (char)payload[i];
-            // Serial.print((char)payload[i]);
-        }
-      }  
-    }
+    
+    
 
     for (int i = 0; i <= 59; ) {
 
@@ -98,6 +71,75 @@ void msgCallback(char* topic, byte* payload, unsigned int length) {
 
 
 }
+void msgCallbackRGB(char* topic, byte* payload, unsigned int length) {
+    
+    String num_led;
+    String color_led1;
+    String color_led2;
+    String color_led3;
+    
+   
+        for (unsigned int i = 0; i < length; i++) {
+            int f1 = 0;
+
+            if ((char)payload[i] == '#') {
+                
+                if (true)
+                {
+
+                }
+
+            }
+
+            if ((char)payload[i] == ',') {
+                f1++;
+                if (f1 == 4) {
+                    f1 = 0;
+                }
+                continue;
+            }
+
+            if (f1 == 0) {
+                num_led += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+            if (f1 == 1) {
+                color_led1 += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+            if (f1 == 2) {
+                color_led2 += (char)payload[i];
+                //  Serial.print((char)payload[i]);
+            }
+            if (f1 == 3) {
+                color_led3 += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+            
+
+        }
+    
+
+    
+        for (int i = 0; i <= 58; i++) {
+            int i2 = 0;
+            for (int i1 = 0; i1 <= 1; i1++) {
+                my_led[i][i][0] = 255;
+
+            }
+
+
+        }
+
+    
+
+
+
+
+    
+
+
+}
 // Функция для подключения к MQTT брокеру
 void connectMQTT() {
     while (!client.connected()) {
@@ -105,6 +147,7 @@ void connectMQTT() {
         if (client.connect(client_id)) {
             Serial.println("Подключено к MQTT брокеру");
             client.subscribe(mqtt_topic);
+            client1.subscribe(topic_num_RGB);
         }
         else {
             Serial.print("Не удалось подключиться к MQTT брокеру, ошибка: ");
@@ -125,18 +168,12 @@ void setup() {
     connectWiFi();
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(msgCallback);
+    client1.setServer(mqtt_server, mqtt_port);
+    client1.setCallback(msgCallbackRGB);
     //добавляем нашу ленту в библиотеку FastLED
     FastLED.addLeds <WS2812, PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(50);
-    for (int i = 0; i <= 58; i++) {
-        int i2 = 0;
-        for (int i1 = 0; i1 <= 1; i1++) {
-            my_led[i][i][0] = 255;
-
-        }
-
-
-    }
+    
 }
 
 void loop() {
