@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 #include <FastLED.h>
 //#define DEBUG
-// Настройки WiFi
+
 //const char* ssid = "TP-Link_D30C";
 //const char* password = "43954971";
 const char* ssid = "PC64 8943";
@@ -72,74 +72,77 @@ void msgCallback(char* topic, byte* payload, unsigned int length) {
 
 }
 void msgCallbackRGB(char* topic, byte* payload, unsigned int length) {
-    
+    String str_led;
     String num_led;
     String color_led1;
     String color_led2;
     String color_led3;
-    
-   
+    #ifdef DEBUG
+    Serial.println("Выполнена функция msgCallbackRGB");
+    #endif // DEBUG
+        int f1 = 0;
         for (unsigned int i = 0; i < length; i++) {
-            int f1 = 0;
-
+            
             if ((char)payload[i] == '#') {
-                
-                if (true)
-                {
-
-                }
-
+               if (f1 = 1 && (char)payload[i] == '#'){
+                    f1 = 2;
+                    continue;
+               }
+               str_led = "";
+                    f1 = 1;
+                     continue;
             }
-
+             
             if ((char)payload[i] == ',') {
-                f1++;
-                if (f1 == 4) {
-                    f1 = 0;
+                if (f1 == 5 && (char)payload[i] == ',') {
+                    my_led[str_led.toInt()][num_led.toInt()][0] = color_led1.toInt();
+                    my_led[str_led.toInt()][num_led.toInt()][1] = color_led2.toInt();
+                    my_led[str_led.toInt()][num_led.toInt()][2] = color_led3.toInt();
+
+                    
+                    num_led = "";
+                    color_led1 = "";
+                    color_led2 = "";
+                    color_led3 = "";
+
+                    f1 = 2;
+                    continue;
                 }
+                f1++;
                 continue;
             }
 
-            if (f1 == 0) {
-                num_led += (char)payload[i];
-                // Serial.print((char)payload[i]);
-            }
-            if (f1 == 1) {
-                color_led1 += (char)payload[i];
+            if (f1 == 1 ) {
+                str_led += (char)payload[i];
                 // Serial.print((char)payload[i]);
             }
             if (f1 == 2) {
+                num_led += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+            if (f1 == 3) {
+                color_led1 += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+            if (f1 == 4) {
                 color_led2 += (char)payload[i];
                 //  Serial.print((char)payload[i]);
             }
-            if (f1 == 3) {
+            if (f1 == 5) {
                 color_led3 += (char)payload[i];
                 // Serial.print((char)payload[i]);
             }
-            
-
-        }
-    
-
-    
-        for (int i = 0; i <= 58; i++) {
-            int i2 = 0;
-            for (int i1 = 0; i1 <= 1; i1++) {
-                my_led[i][i][0] = 255;
-
-            }
-
 
         }
 
-    
-
-
-
-
-    
-
+                
+       
 
 }
+void reedRGB() {
+
+
+ }
 // Функция для подключения к MQTT брокеру
 void connectMQTT() {
     while (!client.connected()) {
@@ -173,14 +176,24 @@ void setup() {
     //добавляем нашу ленту в библиотеку FastLED
     FastLED.addLeds <WS2812, PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(50);
-    
+    /*
+    for (int i = 0; i <= 58; i++) {
+        int i2 = 0;
+        for (int i1 = 0; i1 <= 1; i1++) {
+            my_led[i][i][0] = 255;
+
+        }
+
+
+    }*/
 }
 
 void loop() {
-    if (!client.connected()) {
+    if (!client.connected() && !client1.connected()) {
         connectMQTT();  // Подключаемся к MQTT брокеру, если соединение прервалос
     }
     client.loop();
+    client1.loop();
 }
 /*if (!client.connected()) {
   connectMQTT();  // Подключаемся к MQTT брокеру, если соединение прервалось
@@ -194,7 +207,14 @@ int my_led[][12][6] {
         {{0,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{0,0,0}},
         {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}},
         {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,255,0},{0,255,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}
-       };
+        {{255,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,0,0}},
+        {{0,0,0},{255,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0}},
+        {{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0}},
+        {{0,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{0,0,0}},
+        {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{255,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}},
+        {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,255,0},{0,255,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}
+ 
+      };
 
       for (int i = 0; i <= 11 ; i++) {
 
