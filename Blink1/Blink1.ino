@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
+
 #include <FastLED.h>
 // Настройки WiFi
 //const char* ssid = "TP-Link_D30C";
@@ -36,8 +36,14 @@ void connectWiFi() {
     //Serial.println("Подключено к WiFi");
 }
 
+
 // Функция, вызываемая при получении сообщений по MQTT
 void msgCallback(char* topic, byte* payload, unsigned int length) {
+    String topics = topic;
+    //Serial.println(topics);
+    
+
+    if (topics == "topic_ckl") {
     String ckl_led;
     String num_led;
     String color_led1;
@@ -60,23 +66,13 @@ void msgCallback(char* topic, byte* payload, unsigned int length) {
             ckl_led += (char)payload[i];
         }
 
-        /* if(f1 == 1){
-         num_led += (char)payload[i];
-      // Serial.print((char)payload[i]);
-       }
-         if(f1 == 2){
-         color_led1 += (char)payload[i];
-        // Serial.print((char)payload[i]);
-       }
-         if(f1 == 3){
-          color_led2 += (char)payload[i];
-        //  Serial.print((char)payload[i]);
-       }
-         if(f1 == 4){
-          color_led3 += (char)payload[i];
-         // Serial.print((char)payload[i]);
-       } */
-    }
+    //Serial.println("Выполнена функция msgCallback");
+    
+        for (unsigned int i = 0; i < length; i++) {
+            ckl_led += (char)payload[i]; 
+        }
+    
+    
 
     for (int i = 0; i <= 59; ) {
 
@@ -84,23 +80,90 @@ void msgCallback(char* topic, byte* payload, unsigned int length) {
         i++;
 
     }
-
-    FastLED.show();
-
-
     
+    
+    FastLED.show();
 
     const char* adresCkl_led = ckl_led.c_str();
     client.publish(topicCallback, adresCkl_led);
-   // Serial.println(ckl_led.toInt());
+   #ifdef DEBUG
+    Serial.println(ckl_led.toInt());
+   #endif // DEBUG
+  }
+   if (topics == "topic_num_RGB") {
+       
+        String str_led;
+        String num_led;
+        String color_led1;
+        String color_led2;
+        String color_led3;
 
+        int f1 = 0;
+        for (unsigned int i = 0; i < length; i++) {
+
+            if ((char)payload[i] == '#') {
+                if (f1 = 1 && (char)payload[i] == '#') {
+                    f1 = 2;
+                    continue;
+                }
+                //Serial.println("(" + str_led + ")");
+                str_led = "";
+                f1 = 1;
+                continue;
+            }
+
+            if ((char)payload[i] == ',') {
+                if (f1 == 5 && (char)payload[i] == ',') {
+                    my_led[str_led.toInt()][num_led.toInt()][0] = color_led1.toInt();
+                    my_led[str_led.toInt()][num_led.toInt()][1] = color_led2.toInt();
+                    my_led[str_led.toInt()][num_led.toInt()][2] = color_led3.toInt();
+                    Serial.println(num_led + " " + color_led1 + " " + color_led2 + " " + color_led3);
+
+                    num_led = "";
+                    color_led1 = "";
+                    color_led2 = "";
+                    color_led3 = "";
+                   
+                    f1 = 2;
+                    continue;
+                }
+                f1++;
+                continue;
+            }
+
+            if (f1 == 1) {
+                str_led += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+            if (f1 == 2) {
+                num_led += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+            if (f1 == 3) {
+                color_led1 += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+            if (f1 == 4) {
+                color_led2 += (char)payload[i];
+                //  Serial.print((char)payload[i]);
+            }
+            if (f1 == 5) {
+                color_led3 += (char)payload[i];
+                // Serial.print((char)payload[i]);
+            }
+
+        }
+    }
 }
+
 // Функция для подключения к MQTT брокеру
 void connectMQTT() {
     while (!client.connected()) {
         Serial.println("Подключение к MQTT брокеру...");
         if (client.connect(client_id)) {
             Serial.println("Подключено к MQTT брокеру");
+            
+            client.subscribe(topic_num_RGB);
             client.subscribe(mqtt_topic);
         }
         else {
@@ -113,28 +176,38 @@ void connectMQTT() {
 }
 
 void setup() {
-   // Serial.begin(115200);
+    Serial.begin(115200);
+    Serial.begin(115200);
+  #endif // DEBUG
 
+    
     connectWiFi();
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(msgCallback);
+    
+    client1.setCallback(msgCallbackRGB);
     //добавляем нашу ленту в библиотеку FastLED
     FastLED.addLeds <WS2812, PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(50);
-    for (int i = 0; i <= 58; i++) {
-        for (int i1 = 0; i1 <= 1; i1++) {
-            my_led[i][i][0] = 255;
+    /*
+
+
+    }
 
         }
-    }
+
+
+    }*/
 }
 
 void loop() {
     if (!client.connected()) {
         connectMQTT();  // Подключаемся к MQTT брокеру, если соединение прервалос
     }
+    
     client.loop();
 }
+
 /*if (!client.connected()) {
   connectMQTT();  // Подключаемся к MQTT брокеру, если соединение прервалось
 
