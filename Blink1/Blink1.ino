@@ -12,6 +12,7 @@ const char* mqtt_server = "192.168.0.103";
 const int mqtt_port = 1883;  // ���� �� ��������� ��� MQTT
 const char* mqtt_topic = "topik";
 const char* topicCallback = "topicCallback";
+const char* topic_num_RGB = "topic_num_RGB";
 const char* client_id = "esp32";
 
 
@@ -178,26 +179,16 @@ void connectMQTT() {
 void setup() {
     Serial.begin(115200);
     Serial.begin(115200);
-  #endif // DEBUG
+  
 
     
     connectWiFi();
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(msgCallback);
-    
-    client1.setCallback(msgCallbackRGB);
     //добавляем нашу ленту в библиотеку FastLED
     FastLED.addLeds <WS2812, PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(50);
-    /*
-
-
-    }
-
-        }
-
-
-    }*/
+   
 }
 
     void loop() {
