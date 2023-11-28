@@ -2,6 +2,7 @@
 #include <PubSubClient.h>
 
 #include <FastLED.h>
+#define DEBUG 
 // ��������� WiFi
 //const char* ssid = "TP-Link_D30C";
 //const char* password = "43954971";
@@ -10,7 +11,7 @@ const char* password = "12345678";
 // ��������� MQTT
 const char* mqtt_server = "192.168.0.103";
 const int mqtt_port = 1883;  // ���� �� ��������� ��� MQTT
-const char* mqtt_topic = "topik";
+const char* mqtt_topic = "topic_ckl";
 const char* topicCallback = "topicCallback";
 const char* topic_num_RGB = "topic_num_RGB";
 const char* client_id = "esp32";
@@ -42,54 +43,27 @@ void connectWiFi() {
 void msgCallback(char* topic, byte* payload, unsigned int length) {
     String topics = topic;
     //Serial.println(topics);
-    
-
-    if (topics == "topic_ckl") {
     String ckl_led;
-    String num_led;
-    String color_led1;
-    String color_led2;
-    String color_led3;
-
-
-    for (unsigned int i = 0; i < length; i++) {
-        int f1 = 0;
-        if ((char)payload[i] == '#') {
-            f1 = 1;
-            continue;
-        }
-
-        if ((char)payload[i] == ',') {
-            f1++;
-            continue;
-        }
-        if (f1 == 0) {
-            ckl_led += (char)payload[i];
-        }
-
-    //Serial.println("Выполнена функция msgCallback");
-    
-        for (unsigned int i = 0; i < length; i++) {
+   
+    if (topics == "topic_ckl") {
+     //Serial.println("Выполнена функция msgCallback");
+   
+        for (int i = 0; i < length; i++) {
             ckl_led += (char)payload[i]; 
         }
-    
-    
 
     for (int i = 0; i <= 59; ) {
-
-        leds[i].setRGB(my_led[ckl_led.toInt()][i - 1][0], my_led[ckl_led.toInt()][i - 1][1], my_led[ckl_led.toInt()][i - 1][2]);
-        i++;
-
-            }
+        leds[i].setRGB(my_led[ckl_led.toInt()][i-1][0], my_led[ckl_led.toInt()][i - 1][1], my_led[ckl_led.toInt()][i - 1][2]);
+        i++;  
              }
-
             FastLED.show();
-
+        #ifdef DEBUG
+            //Serial.println(ckl_led.toInt());
+        #endif // DEBUG
     const char* adresCkl_led = ckl_led.c_str();
     client.publish(topicCallback, adresCkl_led);
-   #ifdef DEBUG
-    Serial.println(ckl_led.toInt());
-   #endif // DEBUG
+    ckl_led = "";
+   
   }
    if (topics == "topic_num_RGB") {
        
@@ -177,11 +151,11 @@ void connectMQTT() {
 }
 
 void setup() {
-    Serial.begin(115200);
-    Serial.begin(115200);
-  
 
-    
+#ifdef DEBUG
+    Serial.begin(115200);
+#endif // DEBUG
+
     connectWiFi();
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(msgCallback);
@@ -192,9 +166,12 @@ void setup() {
 }
 
     void loop() {
+        if (!client.setBufferSize(60000)) {
+            Serial.print("Не удалось выделить достаточно памяти для буфера!!! ");
+        }
         if (!client.connected()) {
             connectMQTT();  // ������������ � MQTT �������, ���� ���������� ���������
         }
-
+        
         client.loop();
     }
