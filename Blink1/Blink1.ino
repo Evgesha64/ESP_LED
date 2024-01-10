@@ -1,7 +1,12 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <FastLED.h>
-//#define DEBUG 
+
+
+#define LED_LIBRARY_FastLED
+
+
+
 #define WiFi_select_2  // Выбор сети WiFi 1 - "TP-Link_D30C", 2 - "PC64 8943"
 
 #ifdef WiFi_select_1
@@ -28,168 +33,180 @@ const char* client_id = "esp32";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-CRGB leds[NUM_LEDS];
 
+#ifdef LED_LIBRARY_FastLED
+CRGB leds[NUM_LEDS];
+#endif
 //int my_led[2][60][3]{};
 //int my_led_clear[2]{};
-
+long start;
 // ������� ��� ����������� � WiFi
 void connectWiFi() {
-    WiFi.begin(ssid, password);
-    // Serial.print("����������� � WiFi...");
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.print(".");
-    }
-    //Serial.println("");
-    //Serial.println("���������� � WiFi");
+	WiFi.begin(ssid, password);
+	// Serial.print("����������� � WiFi...");
+	while (WiFi.status() != WL_CONNECTED) {
+		delay(1000);
+		Serial.print(".");
+	}
+	//Serial.println("");
+	//Serial.println("���������� � WiFi");
 }
 
 // �������, ���������� ��� ��������� ��������� �� MQTT
 void msgCallback(char* topic, byte* payload, unsigned int length) {
-    long start = micros();
-    String topics = topic;
-    //Serial.println(topics);
+	//long start = micros();
+	String topics = topic;
+	
 
-    if (topics == "topic_ckl") {
-        //Serial.println("Выполнена функция msgCallback");
+//	if (topics == "topic_ckl") {
+//		
+//#ifdef LED_LIBRARY_FastLED
+//		Fastled.show();
+//#endif // led_library_fastled
+//		client.publish(topicCallback, "1");
+//	}
 
+	if (topics == "topic_num_RGB") {
 
+		String str_led;
+		String num_led;
+		String color_led1;
+		String color_led2;
+		String color_led3;
+		num_led = "";
+		color_led1 = "";
+		color_led2 = "";
+		color_led3 = "";
+#ifdef LED_LIBRARY_FastLED
+		FastLED.clear();
+#endif // LED_LIBRARY_FastLED
 
+		int f1 = 1;
+		for (unsigned int i = 0; i < length; i++) {
 
+			/*if ((char)payload[i] == '#') {
+				if (f1 == 1 && (char)payload[i] == '#') {
+					f1 = 2;
+					continue;
 
-        //Serial.println(ckl_led.toInt());
-        FastLED.show();
-        String topic_cklv = "1";
-        const char* topic_cklv1 = topic_cklv.c_str();
-        client.publish(topicCallback, topic_cklv1);
+				}
 
+				str_led = "";
+				f1 = 1;
+				continue;
+			}*/
 
+			if ((char)payload[i] == ',') {
 
-    }
-
-    if (topics == "topic_num_RGB") {
-
-        String str_led;
-        String num_led;
-        String color_led1;
-        String color_led2;
-        String color_led3;
-        num_led = "";
-        color_led1 = "";
-        color_led2 = "";
-        color_led3 = "";
-        FastLED.clear();
-        int f1 = 1;
-        for (unsigned int i = 0; i < length; i++) {
-
-            /*if ((char)payload[i] == '#') {
-                if (f1 == 1 && (char)payload[i] == '#') {
-                    f1 = 2;
-                    continue;
-
-                }
-
-                str_led = "";
-                f1 = 1;
-                continue;
-            }*/
-
-            if ((char)payload[i] == ',') {
-
-                if (f1 == 4 && (char)payload[i] == ',') {
+				if (f1 == 4 && (char)payload[i] == ',') {
 
 
-                    leds[num_led.toInt()].setRGB(color_led1.toInt(), color_led2.toInt(), color_led3.toInt());
+#ifdef LED_LIBRARY_FastLED
+					leds[num_led.toInt()].setRGB(color_led1.toInt(), color_led2.toInt(), color_led3.toInt());
+#endif // LED_LIBRARY_FastLED
 
-                    //my_led[my_led_clear[0]][my_led_clear[1]][0] = 0;
-                    //my_led[my_led_clear[0]][my_led_clear[1]][1] = 0;
-                    //my_led[my_led_clear[0]][my_led_clear[1]][2] = 0;
-                    //Serial.println("(" + str_led + ")");
-                    //my_led[str_led.toInt()][num_led.toInt()][0] = color_led1.toInt();
-                    //my_led[str_led.toInt()][num_led.toInt()][1] = color_led2.toInt();
-                    //my_led[str_led.toInt()][num_led.toInt()][2] = color_led3.toInt();
-                    //my_led_clear[0] = str_led.toInt();
-                    //my_led_clear[1] = num_led.toInt();
-                    num_led = "";
-                    color_led1 = "";
-                    color_led2 = "";
-                    color_led3 = "";
-                    f1 = 1;
 
-                    continue;
-                }
-                f1++;
-                continue;
-            }
-            switch (f1) {
-            case 1:
-                num_led += (char)payload[i];
-                break;
-            case 2:
-                color_led1 += (char)payload[i];
-                break;
-            case 3:
-                color_led2 += (char)payload[i];
-                break;
-            case 4:
-                color_led3 += (char)payload[i];
-                break;
+					//my_led[my_led_clear[0]][my_led_clear[1]][0] = 0;
+					//my_led[my_led_clear[0]][my_led_clear[1]][1] = 0;
+					//my_led[my_led_clear[0]][my_led_clear[1]][2] = 0;
+					//Serial.println("(" + str_led + ")");
+					//my_led[str_led.toInt()][num_led.toInt()][0] = color_led1.toInt();
+					//my_led[str_led.toInt()][num_led.toInt()][1] = color_led2.toInt();
+					//my_led[str_led.toInt()][num_led.toInt()][2] = color_led3.toInt();
+					//my_led_clear[0] = str_led.toInt();
+					//my_led_clear[1] = num_led.toInt();
+					num_led = "";
+					color_led1 = "";
+					color_led2 = "";
+					color_led3 = "";
+					f1 = 1;
 
-            }
+					continue;
+				}
+				f1++;
+				continue;
+			}
+			switch (f1) {
+			case 1:
+				num_led += (char)payload[i];
+				break;
+			case 2:
+				color_led1 += (char)payload[i];
+				break;
+			case 3:
+				color_led2 += (char)payload[i];
+				break;
+			case 4:
+				color_led3 += (char)payload[i];
+				break;
 
-        }
+			}
 
-    }
+		}
+		#ifdef LED_LIBRARY_FastLED
+		FastLED.show();
+        #endif // led_library_fastled
+      client.publish(topicCallback, "1");
 
-    long end = micros();
-    long seconds = (long)end - start;
-    String seconds1 = String(seconds);
-    const char* seconds2 = seconds1.c_str();
-    client.publish(topictime, seconds2);
+
+
+	}
+
+	
+
+	long end = micros();
+	long seconds = (long)end - start;
+	String seconds1 = String(seconds);
+	const char* seconds2 = seconds1.c_str();
+	client.publish(topictime, seconds2);
+	
+
 }
 
 // Функция для подключения к MQTT брокеру
 void connectMQTT() {
-    while (!client.connected()) {
-        Serial.println("Подключение к MQTT брокеру...");
-        if (client.connect(client_id)) {
-            Serial.println("Подключено к MQTT брокеру");
+	while (!client.connected()) {
+		Serial.println("Подключение к MQTT брокеру...");
+		if (client.connect(client_id)) {
+			Serial.println("Подключено к MQTT брокеру");
 
-            client.subscribe(topic_num_RGB);
-            client.subscribe(mqtt_topic);
-        }
-        else {
-            Serial.print("Не удалось подключиться к MQTT брокеру, ошибка: ");
-            Serial.println(client.state());
-            delay(2000);
-        }
-    }
+			client.subscribe(topic_num_RGB);
+			client.subscribe(mqtt_topic);
+		}
+		else {
+			Serial.print("Не удалось подключиться к MQTT брокеру, ошибка: ");
+			Serial.println(client.state());
+			delay(2000);
+		}
+	}
 
 }
 
 void setup() {
 
 
-    // Serial.begin(115200);
+	// Serial.begin(115200);
 
 
-    connectWiFi();
+	connectWiFi();
 
-    client.setServer(mqtt_server, mqtt_port);
-    client.setCallback(msgCallback);
-    client.setBufferSize(1000);
-    //добавляем нашу ленту в библиотеку FastLED
-    FastLED.addLeds <WS2812, PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-    FastLED.setBrightness(30);
-
+	client.setServer(mqtt_server, mqtt_port);
+	client.setCallback(msgCallback);
+	client.setBufferSize(1000);
+	//добавляем нашу ленту в библиотеку FastLED
+	
+#ifdef LED_LIBRARY_FastLED
+	FastLED.addLeds <WS2812, PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+	FastLED.setBrightness(30);
+#endif // LED_LIBRARY_FastLED
 }
 
 void loop() {
 
-    if (!client.connected()) {
-        connectMQTT();  // ������������ � MQTT �������, ���� ���������� ���������
-    }
+	if (!client.connected()) {
+		connectMQTT();  // ������������ � MQTT �������, ���� ���������� ���������
+	}
+	start = micros();
+	client.loop();
 
-    client.loop();
 }
